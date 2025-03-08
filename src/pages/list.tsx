@@ -1,22 +1,28 @@
 import React, { useState, useMemo } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { useQuery } from "react-query";
-import { Button, Container, IconButton, Stack, Typography } from "@mui/material";
+import { Box, Button, ButtonGroup, Container, IconButton, Stack, Typography } from "@mui/material";
 import TaskForm from "./_form";
-import { getTasks } from "../common/apis";
 import { ITask } from "../common/interface";
 import { TaskPriorityChip, TaskStatusChip } from "./component/common";
 import EditIcon from "@mui/icons-material/Edit";
 import { DateTimeLabel } from "../component/label";
-
+import { useListQuery } from "./hook/useListQuery.hook";
+import { getTasks } from "../common/apis";
+import { DeleteOutline } from "@mui/icons-material";
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
 
 
 const TaskList: React.FC = () => {
-  const { data: response, isLoading } = useQuery("tasks", getTasks);
+
   const [open, setOpen] = useState<{ open: boolean; defaultValues?: ITask, action: "create" | "edit" }>({
     open: false,
     action: "create",
     defaultValues: undefined,
+  });
+
+  const { dataGridProps } = useListQuery({
+    resource: "tasks",
+    getList: (params) => getTasks(params),
   });
 
   const handleEdit = (task: ITask) => {
@@ -67,6 +73,7 @@ const TaskList: React.FC = () => {
         renderCell: function render({ row }) {
           return (
             <IconButton
+              color="primary"
               size="small"
               sx={{
                 color: "text.secondary",
@@ -87,18 +94,25 @@ const TaskList: React.FC = () => {
       <Typography variant="h4" sx={{ mb: 2 }}>
         Task Manager
       </Typography>
-      <Button variant="contained" color="primary" onClick={handleCreate}>
-        Create Task
-      </Button>
-      <TaskForm open={open.open} action={open.action} defaultValues={open.defaultValues} onClose={handleClose} />
+      <Stack direction="row" justifyContent="space-between" spacing={2} sx={{ mb: 2 }}>
+        <ButtonGroup variant="outlined" aria-label="Row action buttons">
+          <Button color="success" aria-label="Task Completed" title="Task Completed"><TaskAltIcon /></Button>
+          <Button color="error" aria-label="Delete Task" title="Delete Task"><DeleteOutline /></Button>
+          <Button>Three</Button>
+        </ButtonGroup>
+        <Box>
+          <Button variant="contained" color="primary" onClick={handleCreate}>
+            Create Task
+          </Button>
+        </Box>
+      </Stack>
       <div style={{ height: 400, marginTop: 20 }}>
         <DataGrid
-          checkboxSelection
-          rows={response?.elements}
-          rowCount={response?.totalElements}
+          {...dataGridProps}
           columns={columns}
-          loading={isLoading} />
+          checkboxSelection />
       </div>
+      <TaskForm open={open.open} action={open.action} defaultValues={open.defaultValues} onClose={handleClose} />
     </Container>
   );
 };
