@@ -7,15 +7,16 @@ import { TaskPriorityChip, TaskStatusChip } from "./component/common";
 import EditIcon from "@mui/icons-material/Edit";
 import { DateTimeLabel } from "../component/label";
 import { useListQuery } from "./hook/useListQuery.hook";
-import { deleteTask, getTasks } from "../common/apis";
+import { getTasks } from "../common/apis";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import { useConfirm } from "./hook/useConfirm.hook";
-import { useMutation, useQueryClient } from "react-query";
+import { useTaskMutate } from "./hook/useMutate.hook";
+import { TaskStatusEnum } from "../common/task.enum";
 
 
 const TaskList: React.FC = () => {
-  const queryClient = useQueryClient();
+
   const [open, setOpen] = useState<{ open: boolean; defaultValues?: ITask, action: "create" | "edit" }>({
     open: false,
     action: "create",
@@ -24,18 +25,33 @@ const TaskList: React.FC = () => {
 
   const [selectedRows, setSelectedRows] = useState<GridRowSelectionModel>([])
 
-  const { mutate } = useMutation(deleteTask,
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries("tasks");
-      },
-    }
-  );
+  const { deleteManyMutate, deleteMutate, updateManyMutate } = useTaskMutate()
 
   const [confirm, confirmDeleteEle] = useConfirm({
     onConfirm: (data: ITask) => {
-      mutate(data.id)
-    }
+      deleteMutate(data.id)
+    },
+    confirmTitle: "Are you sure to delete this task?"
+  })
+
+  const [confirmDeleteMany, confirmDeleteManyEle] = useConfirm({
+    onConfirm: (ids: number[]) => {
+      const manyTasks = {
+        tasks: ids.map((id) => ({ id }))
+      }
+      deleteManyMutate(manyTasks)
+    },
+    confirmTitle: "Are you sure to delete these tasks?"
+  })
+
+  const [confirmCompleteMany, confirmCompleteManyEle] = useConfirm({
+    onConfirm: (ids: number[]) => {
+      const manyTasks = {
+        tasks: ids.map((id) => ({ id, status: TaskStatusEnum.Completed }))
+      }
+      updateManyMutate(manyTasks)
+    },
+    confirmTitle: "Are you sure to complete these tasks?"
   })
 
   const { dataGridProps } = useListQuery({
@@ -70,7 +86,7 @@ const TaskList: React.FC = () => {
         renderCell: ({ row }) => (<TaskPriorityChip priority={row.priority} />),
       },
       {
-        field: "Status",
+        field: "status",
         headerName: "Status",
         align: "center",
         headerAlign: "center",
@@ -121,8 +137,8 @@ const TaskList: React.FC = () => {
         <Box>
           {selectedRows.length > 0 && (
             <ButtonGroup variant="outlined" aria-label="Row action buttons">
-              <Button color="success" aria-label="Task Completed" title="Task Completed"><TaskAltIcon /></Button>
-              <Button color="error" aria-label="Delete Task" title="Delete Task"><DeleteOutlineIcon /></Button>
+              <Button color="success" aria-label="Task Completed" title="Task Completed" onClick={() => confirmCompleteMany(selectedRows)}><TaskAltIcon /></Button>
+              <Button color="error" aria-label="Delete Task" title="Delete Task" onClick={() => confirmDeleteMany(selectedRows)}><DeleteOutlineIcon /></Button>
             </ButtonGroup>
           )}
         </Box>
@@ -137,9 +153,6 @@ const TaskList: React.FC = () => {
           {...dataGridProps}
           columns={columns}
           checkboxSelection
-          onRowClick={({ row }) => {
-            console.log(row, 'row')
-          }}
           disableRowSelectionOnClick
           rowSelectionModel={selectedRows}
           onRowSelectionModelChange={setSelectedRows} // Captures checkbox selection
@@ -147,6 +160,8 @@ const TaskList: React.FC = () => {
       </div>
       <TaskForm open={open.open} action={open.action} defaultValues={open.defaultValues} onClose={handleClose} />
       {confirmDeleteEle}
+      {confirmDeleteManyEle}
+      {confirmCompleteManyEle}
     </Container>
   );
 };

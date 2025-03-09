@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ITask, PageResponse, QueryParams } from "./interface";
+import { IManyTask, ITask, PageResponse, QueryParams } from "./interface";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
@@ -22,10 +22,26 @@ export const deleteTask = async (id: number): Promise<ITask> => {
   return response.data;
 };
 
+export const deleteManyTask = async (
+  manyTask: IManyTask
+): Promise<IManyTask> => {
+  const response = await axios.delete(`${API_URL}/tasks/deleteMany`, {
+    data: manyTask,
+  });
+  return response.data;
+};
+
 export const updateTask = async (
   id: number,
   task: Partial<ITask>
 ): Promise<ITask> => {
   const response = await axios.patch(`${API_URL}/tasks/${id}`, task);
+  return response.data;
+};
+
+export const updateManyTask = async (
+  manyTask: IManyTask
+): Promise<IManyTask> => {
+  const response = await axios.patch(`${API_URL}/tasks/updateMany`, manyTask);
   return response.data;
 };

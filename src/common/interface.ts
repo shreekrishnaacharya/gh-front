@@ -9,6 +9,12 @@ export interface ITask {
   priority: TaskPriorityEnum;
   status: TaskStatusEnum;
 }
+export type ITaskUpdate = Required<Pick<ITask, "id">> &
+  Partial<Omit<ITask, "id">>;
+
+export interface IManyTask {
+  tasks: ITaskUpdate[];
+}
 
 export interface IPage {
   _start: number;
@@ -22,7 +28,6 @@ export interface PageResponse<T> {
   pageable: IPage;
   totalElements: number;
 }
-
 
 export interface QueryParams extends IPage {
   page: number;

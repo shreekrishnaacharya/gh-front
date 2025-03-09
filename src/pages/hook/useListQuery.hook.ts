@@ -80,7 +80,7 @@ export const useListQuery = ({ resource, getList }: ListQueryProps) => {
   const handleSortModelChange = (newModel: GridSortModel) => {
     const { field, sort } = newModel[0] ?? {};
     updateQueryParams({
-      _sort: field,
+      _sort: field ?? "due_date",
       _order: sort == "asc" ? SortDirection.ASC : SortDirection.DESC,
     });
   };
