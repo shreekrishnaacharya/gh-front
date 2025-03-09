@@ -17,6 +17,11 @@ export const createTask = async (task: Omit<ITask, "id">): Promise<ITask> => {
   return response.data;
 };
 
+export const deleteTask = async (id: number): Promise<ITask> => {
+  const response = await axios.delete(`${API_URL}/tasks/${id}`);
+  return response.data;
+};
+
 export const updateTask = async (
   id: number,
   task: Partial<ITask>

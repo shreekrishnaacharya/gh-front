@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
 import { Box, Button, ButtonGroup, Container, IconButton, Stack, Typography } from "@mui/material";
 import TaskForm from "./_form";
 import { ITask } from "../common/interface";
@@ -7,27 +7,41 @@ import { TaskPriorityChip, TaskStatusChip } from "./component/common";
 import EditIcon from "@mui/icons-material/Edit";
 import { DateTimeLabel } from "../component/label";
 import { useListQuery } from "./hook/useListQuery.hook";
-import { getTasks } from "../common/apis";
-import { DeleteOutline } from "@mui/icons-material";
+import { deleteTask, getTasks } from "../common/apis";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import { useConfirm } from "./hook/useConfirm.hook";
+import { useMutation, useQueryClient } from "react-query";
 
 
 const TaskList: React.FC = () => {
-
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState<{ open: boolean; defaultValues?: ITask, action: "create" | "edit" }>({
     open: false,
     action: "create",
     defaultValues: undefined,
   });
 
+  const [selectedRows, setSelectedRows] = useState<GridRowSelectionModel>([])
+
+  const { mutate } = useMutation(deleteTask,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries("tasks");
+      },
+    }
+  );
+
+  const [confirm, confirmDeleteEle] = useConfirm({
+    onConfirm: (data: ITask) => {
+      mutate(data.id)
+    }
+  })
+
   const { dataGridProps } = useListQuery({
     resource: "tasks",
     getList: (params) => getTasks(params),
   });
-
-  const handleEdit = (task: ITask) => {
-    setOpen({ open: true, defaultValues: task, action: "edit" });
-  };
 
   const handleCreate = () => {
     setOpen({ open: true, defaultValues: undefined, action: "create" });
@@ -72,21 +86,30 @@ const TaskList: React.FC = () => {
         sortable: false,
         renderCell: function render({ row }) {
           return (
-            <IconButton
-              color="primary"
-              size="small"
-              sx={{
-                color: "text.secondary",
-              }}
-              onClick={() => handleEdit(row)}
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
+            <Stack direction="row" spacing={1}>
+              <IconButton
+                color="primary"
+                size="small"
+                sx={{
+                  color: "text.secondary",
+                }}
+                onClick={() => setOpen({ open: true, defaultValues: row, action: "edit" })}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+              <IconButton
+                color="primary"
+                size="small"
+                onClick={() => confirm(row)}
+              >
+                <DeleteOutlineIcon color="error" fontSize="small" />
+              </IconButton>
+            </Stack>
           );
         },
       }
     ],
-    [handleEdit]
+    [setOpen, confirm]
   );
 
   return (
@@ -95,11 +118,14 @@ const TaskList: React.FC = () => {
         Task Manager
       </Typography>
       <Stack direction="row" justifyContent="space-between" spacing={2} sx={{ mb: 2 }}>
-        <ButtonGroup variant="outlined" aria-label="Row action buttons">
-          <Button color="success" aria-label="Task Completed" title="Task Completed"><TaskAltIcon /></Button>
-          <Button color="error" aria-label="Delete Task" title="Delete Task"><DeleteOutline /></Button>
-          <Button>Three</Button>
-        </ButtonGroup>
+        <Box>
+          {selectedRows.length > 0 && (
+            <ButtonGroup variant="outlined" aria-label="Row action buttons">
+              <Button color="success" aria-label="Task Completed" title="Task Completed"><TaskAltIcon /></Button>
+              <Button color="error" aria-label="Delete Task" title="Delete Task"><DeleteOutlineIcon /></Button>
+            </ButtonGroup>
+          )}
+        </Box>
         <Box>
           <Button variant="contained" color="primary" onClick={handleCreate}>
             Create Task
@@ -110,9 +136,17 @@ const TaskList: React.FC = () => {
         <DataGrid
           {...dataGridProps}
           columns={columns}
-          checkboxSelection />
+          checkboxSelection
+          onRowClick={({ row }) => {
+            console.log(row, 'row')
+          }}
+          disableRowSelectionOnClick
+          rowSelectionModel={selectedRows}
+          onRowSelectionModelChange={setSelectedRows} // Captures checkbox selection
+        />
       </div>
       <TaskForm open={open.open} action={open.action} defaultValues={open.defaultValues} onClose={handleClose} />
+      {confirmDeleteEle}
     </Container>
   );
 };
