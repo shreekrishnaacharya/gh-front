@@ -1,7 +1,7 @@
 import axios from "axios";
 import { IManyTask, ITask, PageResponse, QueryParams } from "./interface";
 
-const API_URL = process.env.REACT_APP_API_URL;
+const API_URL = "https://task-api.krishna-acharya.com.np";
 
 /**
  * @module common/apis
