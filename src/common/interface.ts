@@ -9,6 +9,8 @@ export interface ITask {
   priority: TaskPriorityEnum;
   status: TaskStatusEnum;
 }
+
+export type ITaskKeys = keyof ITask;
 export type ITaskUpdate = Required<Pick<ITask, "id">> &
   Partial<Omit<ITask, "id">>;
 

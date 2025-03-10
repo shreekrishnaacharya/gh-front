@@ -13,17 +13,45 @@ interface QueryParams extends IPage {
 interface ListQueryProps {
   resource: string;
   getList: (params?: QueryParams) => Promise<PageResponse<any>>;
+  pageSize?: number;
 }
 
-// Typing the return value of useListQuery to be compatible with DataGridProps
-export const useListQuery = ({ resource, getList }: ListQueryProps) => {
+/**
+ * useListQuery is a hook that fetches a list of items from a remote API, and
+ * provides a set of props to render a DataGrid component. It takes care of
+ * handling pagination, sorting, and filtering, as well as automatic re-fetching
+ * of data when the URL changes.
+ *
+ * Props:
+ * - `resource`: The name of the resource to fetch (e.g. "tasks")
+ * - `getList`: A function that fetches a list of items from the remote API,
+ *              given a set of query parameters
+ * - `pageSize`: The number of items to fetch per page (default: 100)
+ *
+ * Returns:
+ * - `dataGridProps`: A set of props to render a DataGrid component
+ * - `queryParams`: The current query parameters
+ * - `isLoading`: Whether the data is currently being fetched
+ * - `refetch`: A function to re-fetch the data
+ * - `setFilter`: A function to set a filter on the data
+ */
+export const useListQuery = ({
+  resource,
+  getList,
+  pageSize = 100,
+}: ListQueryProps) => {
   const location = useLocation();
   const navigate = useNavigate();
 
   // Extract query parameters from the URL
   const getQueryParams = useCallback(() => {
     const params = new URLSearchParams(location.search);
-    const queryParams: Partial<QueryParams> = {};
+    const queryParams: Partial<QueryParams> = {
+      _sort: "due_date",
+      _order: SortDirection.DESC,
+      _start: 0,
+      _end: Number(pageSize),
+    };
 
     params.forEach((value, key) => {
       if (key === "page" || key === "pageSize") {
@@ -34,7 +62,7 @@ export const useListQuery = ({ resource, getList }: ListQueryProps) => {
     });
 
     return queryParams;
-  }, [location.search]);
+  }, [location.search, pageSize]);
 
   // Set query params based on the URL
   const [queryParams, setQueryParams] = useState<Partial<QueryParams>>(
@@ -43,7 +71,7 @@ export const useListQuery = ({ resource, getList }: ListQueryProps) => {
 
   useEffect(() => {
     setQueryParams(getQueryParams());
-  }, [location.search]);
+  }, [location.search, getQueryParams]);
 
   const {
     data: response,
@@ -58,7 +86,6 @@ export const useListQuery = ({ resource, getList }: ListQueryProps) => {
     }
   );
 
-  // Function to update the URL query parameters
   const updateQueryParams = useCallback(
     (newParams: Partial<QueryParams>) => {
       const params = new URLSearchParams(location.search);
@@ -74,34 +101,25 @@ export const useListQuery = ({ resource, getList }: ListQueryProps) => {
         search: params.toString(),
       });
     },
-    [location.search, navigate]
+    [location.search, navigate, location.pathname]
   );
 
   const handleSortModelChange = (newModel: GridSortModel) => {
     const { field, sort } = newModel[0] ?? {};
     updateQueryParams({
       _sort: field ?? "due_date",
-      _order: sort == "asc" ? SortDirection.ASC : SortDirection.DESC,
+      _order: sort === "asc" ? SortDirection.ASC : SortDirection.DESC,
     });
   };
 
-  const handlePageChange = (newPage: number) => {
-    updateQueryParams({ page: newPage });
-  };
-
-  const handlePageSizeChange = (newPageSize: number) => {
-    updateQueryParams({ pageSize: newPageSize });
-  };
-
   const setFilter = (
-    filters: { field: string; value: string | number | boolean }[]
+    filters: { field: string; value: string | number | boolean | any }[]
   ) => {
     filters.forEach((filter) => {
       updateQueryParams({ [filter.field]: filter.value });
     });
   };
 
-  // Return the typed DataGridProps
   const dataGridProps: Partial<DataGridProps> = {
     rowCount: response?.totalElements ?? 0,
     rows: response?.elements ?? [],
@@ -109,13 +127,12 @@ export const useListQuery = ({ resource, getList }: ListQueryProps) => {
     paginationMode: "server",
     sortingMode: "server",
     onSortModelChange: handleSortModelChange,
-    paginationModel: {
-      page: queryParams.page ?? 0,
-      pageSize: queryParams.pageSize ?? 10,
-    },
     onPaginationModelChange: (newPaginationModel) => {
       const { page, pageSize } = newPaginationModel;
-      updateQueryParams({ page, pageSize });
+      updateQueryParams({
+        _start: Number(page) * Number(pageSize),
+        _end: Number(page + 1) * Number(pageSize),
+      });
     },
   };
 

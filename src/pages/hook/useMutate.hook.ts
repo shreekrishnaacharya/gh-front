@@ -5,6 +5,13 @@ import {
   updateManyTask,
 } from "../../common/apis";
 
+  /**
+   * React Query hook for delete and update many tasks
+   * @returns {Object} - An object containing the following:
+   *   - deleteMutate: A function to delete a task
+   *   - updateManyMutate: A function to update many tasks
+   *   - deleteManyMutate: A function to delete many tasks
+   */
 export const useTaskMutate = () => {
   const queryClient = useQueryClient();
   const { mutate: deleteMutate } = useMutation(deleteTask, {

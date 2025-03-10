@@ -1,7 +1,12 @@
 import axios from "axios";
 import { IManyTask, ITask, PageResponse, QueryParams } from "./interface";
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_URL = process.env.REACT_APP_API_URL;
+
+/**
+ * @module common/apis
+ * @description A set of functions for interacting with the API
+ */
 
 export const getTasks = async (
   params?: QueryParams
