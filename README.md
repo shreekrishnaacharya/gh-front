@@ -61,6 +61,13 @@ REACT_APP_API_URL=http://localhost:5000
   npm run build
   ```
 
+## Live application
+
+Application is hosted live on cpanel at http://task-api.krishna-acharya.com.np/
+Swagger file can ba accessed at http://task-api.krishna-acharya.com.np/api
+
+Client application, ie frontend react app, can be accessed at http://task.krishna-acharya.com.np
+
 ## Learn More
 
 - [React documentation](https://reactjs.org/)
