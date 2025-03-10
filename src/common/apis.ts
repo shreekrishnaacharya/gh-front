@@ -1,10 +1,19 @@
 import axios from "axios";
-import { ITask, PageResponse } from "./interface";
+import { IManyTask, ITask, PageResponse, QueryParams } from "./interface";
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_URL = process.env.REACT_APP_API_URL;
 
-export const getTasks = async (): Promise<PageResponse<ITask>> => {
-  const response = await axios.get(`${API_URL}/tasks`);
+/**
+ * @module common/apis
+ * @description A set of functions for interacting with the API
+ */
+
+export const getTasks = async (
+  params?: QueryParams
+): Promise<PageResponse<ITask>> => {
+  const response = await axios.get(`${API_URL}/tasks`, {
+    params,
+  });
   return response.data;
 };
 
@@ -13,10 +22,31 @@ export const createTask = async (task: Omit<ITask, "id">): Promise<ITask> => {
   return response.data;
 };
 
+export const deleteTask = async (id: number): Promise<ITask> => {
+  const response = await axios.delete(`${API_URL}/tasks/${id}`);
+  return response.data;
+};
+
+export const deleteManyTask = async (
+  manyTask: IManyTask
+): Promise<IManyTask> => {
+  const response = await axios.delete(`${API_URL}/tasks/deleteMany`, {
+    data: manyTask,
+  });
+  return response.data;
+};
+
 export const updateTask = async (
   id: number,
   task: Partial<ITask>
 ): Promise<ITask> => {
   const response = await axios.patch(`${API_URL}/tasks/${id}`, task);
+  return response.data;
+};
+
+export const updateManyTask = async (
+  manyTask: IManyTask
+): Promise<IManyTask> => {
+  const response = await axios.patch(`${API_URL}/tasks/updateMany`, manyTask);
   return response.data;
 };

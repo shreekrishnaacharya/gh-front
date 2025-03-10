@@ -10,14 +10,28 @@ export interface ITask {
   status: TaskStatusEnum;
 }
 
+export type ITaskKeys = keyof ITask;
+export type ITaskUpdate = Required<Pick<ITask, "id">> &
+  Partial<Omit<ITask, "id">>;
+
+export interface IManyTask {
+  tasks: ITaskUpdate[];
+}
+
 export interface IPage {
   _start: number;
   _end: number;
-  _sort: string;
-  _order: SortDirection;
+  _sort: string | null;
+  _order: SortDirection | null;
+  [key: string]: string | number | boolean | null | undefined;
 }
 export interface PageResponse<T> {
   elements: T[];
   pageable: IPage;
   totalElements: number;
+}
+
+export interface QueryParams extends IPage {
+  page: number;
+  pageSize: number;
 }

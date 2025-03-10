@@ -11,6 +11,30 @@ import { InputAdornment } from "@mui/material";
 import { ClearIcon } from "@mui/x-date-pickers/icons";
 import { FormHelperText, Typography } from "@mui/material"
 
+/**
+ * This file contains a collection of reusable UI components for form inputs.
+ * It includes a Controller component that wraps the react-hook-form Controller
+ * component, and provides some additional features such as:
+ * - A clear button to clear the input
+ * - A label that displays the input's label
+ * - Support for required fields
+ * - Support for displaying error messages
+ * 
+ * The components are designed to be used with the react-hook-form library.
+ * 
+ * The main component is the CInput component, which is a wrapper around the 
+ * TextField component from @mui/material. It provides the additional features
+ * mentioned above.
+ * 
+ * The CDateTimePicker component is a wrapper around the DateTimePicker component
+ * from @mui/x-date-pickers. It provides the same additional features as the 
+ * CInput component.
+ * 
+ * The CSelect component is a wrapper around the Select component from 
+ * @mui/material. It provides the same additional features as the CInput component.
+ * 
+ */
+
 export const getLabel = (label: string, required: boolean | undefined) => {
     return required ? (<Typography component={"span"}>{label}<Typography component={"span"} style={{ color: "red" }}> *</Typography></Typography>) : label
 }
